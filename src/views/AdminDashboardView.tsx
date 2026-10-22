@@ -8,7 +8,8 @@ import {
   SupportProject,
   AdminUser,
   AdminRole,
-  DonationTransaction
+  DonationTransaction,
+  DailyLiturgyAndSaint
 } from '../types';
 import {
   ShieldCheck,
@@ -18,6 +19,7 @@ import {
   Calendar,
   Users,
   Heart,
+  BookOpen,
   Settings,
   Database,
   Plus,
@@ -74,6 +76,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onLogout
     uploadMedia,
     deleteMediaUpload,
     scriptureReflection,
+    weeklyLiturgy,
+    updateDailyLiturgy,
     updateParishInfo,
     updateScriptureReflection,
     addMassSchedule,
@@ -102,7 +106,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onLogout
   } = useParish();
 
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'transactions' | 'users' | 'media' | 'announcements' | 'masses' | 'events' | 'ministries' | 'projects' | 'settings' | 'database'
+    'overview' | 'transactions' | 'users' | 'media' | 'announcements' | 'masses' | 'events' | 'liturgy' | 'ministries' | 'projects' | 'settings' | 'database'
   >('overview');
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -114,6 +118,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onLogout
   const [editingMinistry, setEditingMinistry] = useState<Partial<MinistryGroup> | null>(null);
   const [editingProject, setEditingProject] = useState<Partial<SupportProject> | null>(null);
   const [editingUser, setEditingUser] = useState<Partial<AdminUser> | null>(null);
+  const [editingLiturgyDay, setEditingLiturgyDay] = useState<DailyLiturgyAndSaint | null>(null);
 
   // Media Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -282,6 +287,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onLogout
           { key: 'users', label: `Admin Users (${adminUsers.length})`, icon: Users, perm: 'MANAGE_USERS' },
           { key: 'announcements', label: `Bulletins (${announcements.length})`, icon: Bell, perm: 'MANAGE_CONTENT' },
           { key: 'masses', label: `Mass Schedules (${massSchedules.length})`, icon: Clock, perm: 'MANAGE_LITURGY' },
+          { key: 'liturgy', label: 'Daily Readings & Saints', icon: BookOpen, perm: 'MANAGE_LITURGY' },
           { key: 'events', label: `Events (${events.length})`, icon: Calendar, perm: 'MANAGE_CONTENT' },
           { key: 'ministries', label: `Ministries (${ministries.length})`, icon: Users, perm: 'MANAGE_CONTENT' },
           { key: 'projects', label: `Projects (${projects.length})`, icon: Heart, perm: 'MANAGE_FINANCES' },
@@ -1016,6 +1022,89 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onLogout
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: DAILY READINGS & SAINTS OF THE WEEK */}
+      {activeTab === 'liturgy' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-cinzel text-xl font-bold text-[#1E1E1E]">
+                Daily Scripture Readings, Saints & Feast Days
+              </h2>
+              <p className="text-xs text-[#7A7167]">
+                Update Mass readings, Saint commemorations, and pastoral reflections for all 7 days of the liturgical week.
+              </p>
+            </div>
+            <div className="text-xs bg-[#FAF7F2] border border-[#E7DFD5] px-3.5 py-1.5 rounded-xl font-medium text-[#7A1C28]">
+              7 Days Configured in Lectionary
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {weeklyLiturgy.map((day) => {
+              const colorDot = 
+                day.liturgicalColor === 'Green' ? 'bg-emerald-600' :
+                day.liturgicalColor === 'Red' ? 'bg-rose-600' :
+                day.liturgicalColor === 'Purple' ? 'bg-purple-700' :
+                day.liturgicalColor === 'Rose' ? 'bg-pink-500' : 'bg-amber-500';
+
+              return (
+                <div
+                  key={day.id}
+                  className="bg-white border border-[#E7DFD5] rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-[#7A1C28]/40 transition-colors"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full ${colorDot}`} />
+                        <span className="font-bold text-[#7A1C28]">{day.dayOfWeek}</span>
+                      </div>
+                      <span className="font-mono text-[11px] text-[#7A7167]">{day.date}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8A7F73]">
+                        {day.feastRank} · {day.liturgicalColor}
+                      </span>
+                      <h3 className="font-cinzel text-base font-bold text-[#1E1E1E] leading-snug">
+                        {day.saintOrFeastName}
+                      </h3>
+                      {day.saintTitle && (
+                        <p className="text-xs text-[#7A1C28] font-medium mt-0.5">
+                          {day.saintTitle}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="p-3 bg-[#FAF7F2] rounded-xl border border-[#E7DFD5] text-xs space-y-1">
+                      <p className="font-semibold text-[#1E1E1E] truncate">Gospel: {day.gospel.reference}</p>
+                      <p className="text-[11px] text-[#595147] italic line-clamp-1">"{day.gospel.keyVerse}"</p>
+                      <p className="text-[11px] text-[#7A7167] pt-1 border-t border-[#F0EAE1]">
+                        Reflection: <span className="font-medium text-[#1E1E1E]">{day.reflectionTitle}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-[#F0EAE1] flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-[#8E8377] truncate max-w-[160px]">
+                      By {day.author}
+                    </span>
+                    {canPerform('MANAGE_LITURGY') && (
+                      <button
+                        onClick={() => setEditingLiturgyDay({ ...day })}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#7A1C28] text-white hover:bg-[#63141F] transition-colors cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit Day</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -1863,6 +1952,281 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onLogout
                 className="px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider bg-[#7A1C28] text-white hover:bg-[#63141F] cursor-pointer"
               >
                 Save Project
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT DAILY READINGS & SAINT OF THE DAY */}
+      {editingLiturgyDay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#FAF7F2] border border-[#E2D9CE] rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#E7DFD5] pb-3">
+              <div>
+                <span className="text-[10px] text-[#7A1C28] uppercase font-bold tracking-wider">
+                  Liturgical Lectionary Editor
+                </span>
+                <h2 className="font-cinzel text-xl font-bold text-[#1E1E1E]">
+                  Edit {editingLiturgyDay.dayOfWeek} ({editingLiturgyDay.date})
+                </h2>
+              </div>
+              <button
+                onClick={() => setEditingLiturgyDay(null)}
+                className="p-1.5 text-[#6B635A] hover:text-[#1E1E1E] rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-[#3E3832]">
+              {/* Row 1: Saint / Feast & Title */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider mb-1">Saint or Feast Name *</label>
+                  <input
+                    type="text"
+                    value={editingLiturgyDay.saintOrFeastName}
+                    onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, saintOrFeastName: e.target.value })}
+                    className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider mb-1">Saint Title / Era</label>
+                  <input
+                    type="text"
+                    value={editingLiturgyDay.saintTitle || ''}
+                    onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, saintTitle: e.target.value })}
+                    className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                    placeholder="e.g. Bishop & Martyr (c. 107 AD)"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Rank & Color */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider mb-1">Feast Rank</label>
+                  <select
+                    value={editingLiturgyDay.feastRank}
+                    onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, feastRank: e.target.value as any })}
+                    className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                  >
+                    <option value="Solemnity">Solemnity</option>
+                    <option value="Feast">Feast</option>
+                    <option value="Memorial">Memorial</option>
+                    <option value="Optional Memorial">Optional Memorial</option>
+                    <option value="Ferial Day (Weekday)">Ferial Day (Weekday)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider mb-1">Liturgical Color</label>
+                  <select
+                    value={editingLiturgyDay.liturgicalColor}
+                    onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, liturgicalColor: e.target.value as any })}
+                    className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                  >
+                    <option value="Green">Green (Hope & Ordinary Time)</option>
+                    <option value="White">White (Purity & Solemnities)</option>
+                    <option value="Red">Red (Martyrs & Holy Spirit)</option>
+                    <option value="Purple">Purple (Penance & Advent/Lent)</option>
+                    <option value="Rose">Rose (Joyful Mid-Season)</option>
+                    <option value="Gold">Gold (High Solemnities)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 3: Saint Bio & Patronage */}
+              <div>
+                <label className="block font-semibold uppercase tracking-wider mb-1">Saint Life & Holy Witness</label>
+                <textarea
+                  rows={3}
+                  value={editingLiturgyDay.saintBio}
+                  onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, saintBio: e.target.value })}
+                  className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold uppercase tracking-wider mb-1">Patronage</label>
+                <input
+                  type="text"
+                  value={editingLiturgyDay.patronage || ''}
+                  onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, patronage: e.target.value })}
+                  className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                  placeholder="e.g. Parishioners, lost causes, workers"
+                />
+              </div>
+
+              {/* Row 4: First Reading */}
+              <div className="pt-2 border-t border-[#E7DFD5] space-y-2">
+                <span className="font-bold text-[#7A1C28] uppercase text-[11px] block">First Reading</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-1">
+                    <label className="block font-semibold text-[10px] mb-1">Scripture Reference</label>
+                    <input
+                      type="text"
+                      value={editingLiturgyDay.firstReading.reference}
+                      onChange={(e) => setEditingLiturgyDay({
+                        ...editingLiturgyDay,
+                        firstReading: { ...editingLiturgyDay.firstReading, reference: e.target.value }
+                      })}
+                      className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block font-semibold text-[10px] mb-1">Excerpt Text</label>
+                    <input
+                      type="text"
+                      value={editingLiturgyDay.firstReading.excerpt}
+                      onChange={(e) => setEditingLiturgyDay({
+                        ...editingLiturgyDay,
+                        firstReading: { ...editingLiturgyDay.firstReading, excerpt: e.target.value }
+                      })}
+                      className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 5: Responsorial Psalm */}
+              <div className="pt-2 border-t border-[#E7DFD5] space-y-2">
+                <span className="font-bold text-[#7A1C28] uppercase text-[11px] block">Responsorial Psalm</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[10px] mb-1">Psalm Reference</label>
+                    <input
+                      type="text"
+                      value={editingLiturgyDay.responsorialPsalm.reference}
+                      onChange={(e) => setEditingLiturgyDay({
+                        ...editingLiturgyDay,
+                        responsorialPsalm: { ...editingLiturgyDay.responsorialPsalm, reference: e.target.value }
+                      })}
+                      className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block font-semibold text-[10px] mb-1">Psalm Refrain (R/.)</label>
+                    <input
+                      type="text"
+                      value={editingLiturgyDay.responsorialPsalm.refrain}
+                      onChange={(e) => setEditingLiturgyDay({
+                        ...editingLiturgyDay,
+                        responsorialPsalm: { ...editingLiturgyDay.responsorialPsalm, refrain: e.target.value }
+                      })}
+                      className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 6: The Holy Gospel */}
+              <div className="pt-2 border-t border-[#E7DFD5] space-y-2">
+                <span className="font-bold text-[#7A1C28] uppercase text-[11px] block">The Holy Gospel</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[10px] mb-1">Gospel Citation</label>
+                    <input
+                      type="text"
+                      value={editingLiturgyDay.gospel.reference}
+                      onChange={(e) => setEditingLiturgyDay({
+                        ...editingLiturgyDay,
+                        gospel: { ...editingLiturgyDay.gospel, reference: e.target.value }
+                      })}
+                      className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block font-semibold text-[10px] mb-1">Key Verse Highlight</label>
+                    <input
+                      type="text"
+                      value={editingLiturgyDay.gospel.keyVerse}
+                      onChange={(e) => setEditingLiturgyDay({
+                        ...editingLiturgyDay,
+                        gospel: { ...editingLiturgyDay.gospel, keyVerse: e.target.value }
+                      })}
+                      className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-semibold text-[10px] mb-1">Gospel Narrative Text</label>
+                  <textarea
+                    rows={3}
+                    value={editingLiturgyDay.gospel.excerpt}
+                    onChange={(e) => setEditingLiturgyDay({
+                      ...editingLiturgyDay,
+                      gospel: { ...editingLiturgyDay.gospel, excerpt: e.target.value }
+                    })}
+                    className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* Row 7: Pastoral Reflection */}
+              <div className="pt-2 border-t border-[#E7DFD5] space-y-2">
+                <span className="font-bold text-[#7A1C28] uppercase text-[11px] block">Pastoral Reflection & Homily Note</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[10px] mb-1">Reflection Title</label>
+                    <input
+                      type="text"
+                      value={editingLiturgyDay.reflectionTitle}
+                      onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, reflectionTitle: e.target.value })}
+                      className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-[10px] mb-1">Author / Clergy</label>
+                    <input
+                      type="text"
+                      value={editingLiturgyDay.author}
+                      onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, author: e.target.value })}
+                      className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-semibold text-[10px] mb-1">Reflection Content</label>
+                  <textarea
+                    rows={4}
+                    value={editingLiturgyDay.reflectionText}
+                    onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, reflectionText: e.target.value })}
+                    className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* Row 8: Family Daily Prayer (Collect) */}
+              <div className="pt-2 border-t border-[#E7DFD5] space-y-2">
+                <label className="block font-bold text-[#7A1C28] uppercase text-[11px]">Daily Family Prayer (Collect)</label>
+                <textarea
+                  rows={2}
+                  value={editingLiturgyDay.dailyPrayer}
+                  onChange={(e) => setEditingLiturgyDay({ ...editingLiturgyDay, dailyPrayer: e.target.value })}
+                  className="w-full p-2.5 bg-white border border-[#DCD3C7] rounded-xl text-xs italic font-lora"
+                />
+              </div>
+
+            </div>
+
+            <div className="pt-4 border-t border-[#E7DFD5] flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setEditingLiturgyDay(null)}
+                className="px-4 py-2 rounded-xl text-xs text-[#52493F] hover:bg-[#EAE2D7] cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  updateDailyLiturgy(editingLiturgyDay.id, editingLiturgyDay);
+                  setEditingLiturgyDay(null);
+                }}
+                className="px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider bg-[#7A1C28] text-white hover:bg-[#63141F] cursor-pointer"
+              >
+                Save Liturgy & Readings
               </button>
             </div>
           </div>

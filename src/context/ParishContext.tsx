@@ -20,7 +20,8 @@ import {
   PrayerRequest,
   ContactMessage,
   GalleryItem,
-  ScriptureReflection
+  ScriptureReflection,
+  DailyLiturgyAndSaint
 } from '../types';
 import {
   initialParishInfo,
@@ -32,6 +33,7 @@ import {
   initialProjects,
   initialGallery,
   initialScriptureReflection,
+  initialWeeklyLiturgyAndSaints,
   initialAdminUsers,
   initialTransactions
 } from '../data/defaultData';
@@ -59,6 +61,8 @@ interface ParishContextType {
   gallery: GalleryItem[];
   mediaUploads: MediaUploadItem[];
   scriptureReflection: ScriptureReflection;
+  weeklyLiturgy: DailyLiturgyAndSaint[];
+  updateDailyLiturgy: (id: string, updated: Partial<DailyLiturgyAndSaint>) => void;
   
   // Admin auth & RBAC
   isAdmin: boolean;
@@ -159,9 +163,9 @@ interface ParishContextType {
 
 const ParishContext = createContext<ParishContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'stmichael_parish_data_v4';
-const ADMIN_USER_KEY = 'stmichael_admin_user_v4';
-const SUPABASE_CONFIG_KEY = 'stmichael_supabase_config_v4';
+const STORAGE_KEY = 'stmichael_parish_data_v5';
+const ADMIN_USER_KEY = 'stmichael_admin_user_v5';
+const SUPABASE_CONFIG_KEY = 'stmichael_supabase_config_v5';
 
 export const ParishProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [parishInfo, setParishInfo] = useState<ParishInfo>(() => {
@@ -327,6 +331,15 @@ export const ParishProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   });
 
+  const [weeklyLiturgy, setWeeklyLiturgy] = useState<DailyLiturgyAndSaint[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_weekly_liturgy`);
+      return saved ? JSON.parse(saved) : initialWeeklyLiturgyAndSaints;
+    } catch {
+      return initialWeeklyLiturgyAndSaints;
+    }
+  });
+
   // Admin users state (RBAC)
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>(() => {
     try {
@@ -428,6 +441,10 @@ export const ParishProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_reflection`, JSON.stringify(scriptureReflection));
   }, [scriptureReflection]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_weekly_liturgy`, JSON.stringify(weeklyLiturgy));
+  }, [weeklyLiturgy]);
 
   // Toast helper
   const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
@@ -717,6 +734,17 @@ export const ParishProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     setScriptureReflection(reflection);
     showToast('Scripture reflection updated', 'success');
+  };
+
+  const updateDailyLiturgy = (id: string, updated: Partial<DailyLiturgyAndSaint>) => {
+    if (!canPerform('MANAGE_LITURGY') && !canPerform('MANAGE_CONTENT')) {
+      showToast('Access Denied: Liturgical permissions required to update daily readings and saints', 'error');
+      return;
+    }
+    setWeeklyLiturgy((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
+    );
+    showToast('Daily readings & saint of the day updated', 'success');
   };
 
   // Mass schedules
@@ -1021,6 +1049,7 @@ export const ParishProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       mediaUploads,
       adminUsers,
       scriptureReflection,
+      weeklyLiturgy,
       exportedAt: new Date().toISOString()
     };
     return JSON.stringify(bundle, null, 2);
@@ -1046,6 +1075,7 @@ export const ParishProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (data.mediaUploads) setMediaUploads(data.mediaUploads);
       if (data.adminUsers) setAdminUsers(data.adminUsers);
       if (data.scriptureReflection) setScriptureReflection(data.scriptureReflection);
+      if (data.weeklyLiturgy) setWeeklyLiturgy(data.weeklyLiturgy);
       showToast('Parish data imported successfully', 'success');
       return true;
     } catch {
@@ -1071,6 +1101,7 @@ export const ParishProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setGallery(initialGallery);
     setAdminUsers(initialAdminUsers);
     setScriptureReflection(initialScriptureReflection);
+    setWeeklyLiturgy(initialWeeklyLiturgyAndSaints);
     showToast('Reset to default parish records', 'info');
   };
 
@@ -1104,6 +1135,8 @@ export const ParishProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         gallery,
         mediaUploads,
         scriptureReflection,
+        weeklyLiturgy,
+        updateDailyLiturgy,
         isAdmin,
         currentAdminUser,
         adminUsers,

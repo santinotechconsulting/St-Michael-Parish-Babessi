@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavigationTab, Announcement, ParishEvent } from '../types';
 import { useParish } from '../context/ParishContext';
+import { WeeklyLiturgyAndSaints } from '../components/WeeklyLiturgyAndSaints';
 import {
   Cross,
   Calendar,
@@ -460,35 +461,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       </section>
 
-      {/* G. SCRIPTURE OR SPIRITUAL REFLECTION OF THE WEEK */}
+      {/* G. SAINTS, FEAST DAYS OF THE WEEK, DAILY READINGS & REFLECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-[#1C1617] text-white rounded-3xl p-8 sm:p-12 relative overflow-hidden border border-[#3A2D30] shadow-xl">
-          <div className="relative z-10 max-w-3xl space-y-4">
-            
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">
-              <BookOpen className="w-4 h-4" />
-              <span>Weekly Catholic Scripture & Reflection · {scriptureReflection.liturgicalTitle}</span>
-            </div>
-
-            <h3 className="font-cinzel text-xl sm:text-2xl font-bold text-[#FAF7F2]">
-              {scriptureReflection.readingReference}
-            </h3>
-
-            <blockquote className="font-lora text-base sm:text-lg italic text-[#E5DCD3] border-l-2 border-[#D4AF37] pl-4 py-1 leading-relaxed">
-              {scriptureReflection.scriptureText}
-            </blockquote>
-
-            <p className="text-xs sm:text-sm text-[#BDB2A6] leading-relaxed font-light pt-2">
-              {scriptureReflection.reflection}
-            </p>
-
-            <div className="pt-2 text-xs text-[#8E8377] flex items-center justify-between border-t border-[#3A2D30]">
-              <span>Reflection by: {scriptureReflection.author}</span>
-              <span>Published for St. Michael Parish Community</span>
-            </div>
-
-          </div>
-        </div>
+        <WeeklyLiturgyAndSaints />
       </section>
 
       {/* E & F. LATEST NEWS & UPCOMING EVENTS SPLIT */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParish } from '../context/ParishContext';
 import { SacramentInfo } from '../types';
+import { WeeklyLiturgyAndSaints } from '../components/WeeklyLiturgyAndSaints';
 import {
   Cross,
   Clock,
@@ -26,7 +27,7 @@ export const MassAndSacramentsView: React.FC<MassAndSacramentsViewProps> = ({
 }) => {
   const { massSchedules, sacraments } = useParish();
   const [selectedSacrament, setSelectedSacrament] = useState<SacramentInfo | null>(sacraments[0]);
-  const [activeTab, setActiveTab] = useState<'schedule' | 'sacraments'>('schedule');
+  const [activeTab, setActiveTab] = useState<'schedule' | 'sacraments' | 'readings-saints'>('schedule');
 
   const regularSchedules = massSchedules.filter((m) => !m.isSpecialSeason);
   const specialFeasts = massSchedules.filter((m) => m.isSpecialSeason);
@@ -50,20 +51,30 @@ export const MassAndSacramentsView: React.FC<MassAndSacramentsViewProps> = ({
 
       {/* Primary Tab Switcher */}
       <div className="flex justify-center">
-        <div className="inline-flex p-1.5 bg-[#EAE2D7] rounded-xl border border-[#DCD3C7]">
+        <div className="inline-flex flex-wrap p-1.5 bg-[#EAE2D7] rounded-xl border border-[#DCD3C7] gap-1">
           <button
             onClick={() => setActiveTab('schedule')}
-            className={`px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+            className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === 'schedule'
                 ? 'bg-white text-[#7A1C28] shadow-sm'
                 : 'text-[#615950] hover:text-[#1E1E1E]'
             }`}
           >
-            Mass & Liturgical Schedule
+            Mass Schedule
+          </button>
+          <button
+            onClick={() => setActiveTab('readings-saints')}
+            className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+              activeTab === 'readings-saints'
+                ? 'bg-white text-[#7A1C28] shadow-sm'
+                : 'text-[#615950] hover:text-[#1E1E1E]'
+            }`}
+          >
+            Daily Readings & Saints
           </button>
           <button
             onClick={() => setActiveTab('sacraments')}
-            className={`px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+            className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === 'sacraments'
                 ? 'bg-white text-[#7A1C28] shadow-sm'
                 : 'text-[#615950] hover:text-[#1E1E1E]'
@@ -209,7 +220,14 @@ export const MassAndSacramentsView: React.FC<MassAndSacramentsViewProps> = ({
         </div>
       )}
 
-      {/* TAB 2: THE SEVEN HOLY SACRAMENTS */}
+      {/* TAB 2: DAILY READINGS & SAINTS */}
+      {activeTab === 'readings-saints' && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <WeeklyLiturgyAndSaints />
+        </div>
+      )}
+
+      {/* TAB 3: THE SEVEN HOLY SACRAMENTS */}
       {activeTab === 'sacraments' && (
         <div className="space-y-8 animate-in fade-in duration-300">
           

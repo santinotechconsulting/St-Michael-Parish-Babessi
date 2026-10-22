@@ -197,6 +197,43 @@ export interface ScriptureReflection {
   author: string;
 }
 
+export type LiturgicalColor = 'Green' | 'White' | 'Red' | 'Purple' | 'Rose' | 'Gold';
+
+export interface DailyLiturgyAndSaint {
+  id: string;
+  date: string; // YYYY-MM-DD
+  dayOfWeek: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+  liturgicalTitle: string;
+  liturgicalColor: LiturgicalColor;
+  feastRank: 'Solemnity' | 'Feast' | 'Memorial' | 'Optional Memorial' | 'Ferial Day (Weekday)';
+  saintOrFeastName: string;
+  saintTitle?: string;
+  saintBio: string;
+  patronage?: string;
+  firstReading: {
+    reference: string;
+    excerpt: string;
+  };
+  responsorialPsalm: {
+    reference: string;
+    refrain: string;
+    verseExcerpt: string;
+  };
+  secondReading?: {
+    reference: string;
+    excerpt: string;
+  };
+  gospel: {
+    reference: string;
+    keyVerse: string;
+    excerpt: string;
+  };
+  reflectionTitle: string;
+  reflectionText: string;
+  author: string;
+  dailyPrayer: string;
+}
+
 export type DonationFrequency = 'one-time' | 'monthly' | 'quarterly' | 'annual';
 export type PaymentGateway = 'MTN Mobile Money' | 'Orange Money' | 'Stripe (Cards)' | 'PayPal' | 'Bank Wire';
 
